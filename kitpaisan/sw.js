@@ -1,6 +1,6 @@
-const CACHE = 'barcode-kitpaisan-v2';
+const CACHE = 'barcode-kitpaisan-v3';
 const ASSETS = [
-  './', './index.html', './sw.js', './barcode-scanner-support.js?v=1', './barcode-stock-policy-support.js?v=1',
+  './', './index.html', './sw.js', './barcode-scanner-support.js?v=1', './barcode-stock-policy-support.js?v=2',
   './pos-offline/styles-fixed.css?v=44', './pos-offline/manifest.webmanifest',
   './pos-offline/shop-scope.js', './pos-offline/persistence-guard.js', './pos-offline/imported-data.js',
   './pos-offline/category-sync.js', './pos-offline/supabase-client.js?v=45', './pos-offline/auth-support.js?v=51',
@@ -15,6 +15,16 @@ self.addEventListener('install', (event) => {
 });
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
 self.addEventListener('fetch', (event) => {
+  const url = new URL(event.request.url);
+  const isPage = url.pathname.endsWith('/kitpaisan/') || url.pathname.endsWith('/kitpaisan/index.html');
+  if (isPage) {
+    event.respondWith(fetch(event.request, { cache: 'no-store' }).then((response) => {
+      const copy = response.clone();
+      caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+      return response;
+    }).catch(() => caches.match(event.request).then((cached) => cached || caches.match('./index.html'))));
+    return;
+  }
   event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
     const copy = response.clone();
     caches.open(CACHE).then((cache) => cache.put(event.request, copy));

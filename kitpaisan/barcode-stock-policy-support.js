@@ -71,12 +71,27 @@
     };
   }
 
+  function wrapRender(name, after) {
+    const original = window[name];
+    if (typeof original !== 'function' || original.__barcodeStockWrapped) return;
+    const wrapped = function () {
+      const result = original.apply(this, arguments);
+      window.setTimeout(after, 0);
+      return result;
+    };
+    wrapped.__barcodeStockWrapped = true;
+    window[name] = wrapped;
+  }
+
   window.addToCart = unlimitedAddToCart;
   window.changeQty = unlimitedChangeQty;
   hideStockInput();
   hideStockElements();
   allowProductButtons();
   keepStockUnchangedAfterSale();
+  wrapRender('renderProducts', () => { hideStockElements(); allowProductButtons(); });
+  wrapRender('renderManageProducts', hideStockElements);
+  wrapRender('renderReports', hideStockElements);
 
   document.querySelector('#productForm')?.addEventListener('submit', () => {
     const input = document.querySelector('#productForm input[name="stock"]');
@@ -84,7 +99,7 @@
   }, true);
 
   const grid = document.querySelector('#productGrid');
-  if (grid) new MutationObserver(allowProductButtons).observe(grid, { childList: true });
+  if (grid) new MutationObserver(() => { allowProductButtons(); hideStockElements(); }).observe(grid, { childList: true });
   document.addEventListener('click', () => window.setTimeout(() => {
     hideStockInput();
     hideStockElements();
