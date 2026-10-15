@@ -1,0 +1,23 @@
+const CACHE = 'barcode-kitpaisan-v1';
+const ASSETS = [
+  './', './index.html', './sw.js', './barcode-scanner-support.js?v=1',
+  './pos-offline/styles-fixed.css?v=44', './pos-offline/manifest.webmanifest',
+  './pos-offline/shop-scope.js', './pos-offline/persistence-guard.js', './pos-offline/imported-data.js',
+  './pos-offline/category-sync.js', './pos-offline/supabase-client.js?v=45', './pos-offline/auth-support.js?v=51',
+  './pos-offline/app.js?v=44', './pos-offline/sku-support.js?v=44', './pos-offline/discount-support.js?v=44',
+  './pos-offline/product-search-support.js?v=44', './pos-offline/unit-support.js?v=45',
+  './pos-offline/unit-display-support.js?v=44', './pos-offline/receipt-template.js?v=44',
+  './pos-offline/cloud-sync.js?v=45', './pos-offline/hidden-products-support.js?v=2'
+];
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS)));
+});
+self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+self.addEventListener('fetch', (event) => {
+  event.respondWith(caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
+    const copy = response.clone();
+    caches.open(CACHE).then((cache) => cache.put(event.request, copy));
+    return response;
+  }).catch(() => caches.match('./index.html'))));
+});
