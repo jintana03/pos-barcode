@@ -59,7 +59,8 @@
       'Content-Type': 'application/json',
       ...(options.headers || {})
     };
-    if (session?.access_token) headers.Authorization = `Bearer ${session.access_token}`;
+    const publicAuthRequest = path.startsWith('/auth/v1/token') || path.startsWith('/auth/v1/signup');
+    if (session?.access_token && !publicAuthRequest) headers.Authorization = `Bearer ${session.access_token}`;
     const response = await fetch(`${SUPABASE_URL}${path}`, { ...options, headers });
     const text = await response.text();
     let data = null;

@@ -165,8 +165,12 @@
 
   // Keep the active login when the user reloads the POS page.
   // A new browser tab still shows the login screen unless this tab has an active session.
-  const savedUser = sessionStorage.getItem(SESSION_USER_KEY) || localStorage.getItem(PERSISTENT_SESSION_USER_KEY) || '';
+  function savedLoginUser() {
+    return sessionStorage.getItem(SESSION_USER_KEY) || localStorage.getItem(PERSISTENT_SESSION_USER_KEY) || '';
+  }
+
   async function restoreLogin() {
+    const savedUser = savedLoginUser();
     const cloudSession = cloud?.configured
       ? (cloud.restoreSession ? await cloud.restoreSession() : cloud.hasSession?.())
       : false;
@@ -186,10 +190,12 @@
     localStorage.removeItem(PERSISTENT_SESSION_KEY);
     localStorage.removeItem(PERSISTENT_SESSION_USER_KEY);
   }
-  restoreLogin();
+  const restorePromise = restoreLogin();
 
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
+    await restorePromise;
+    if (document.body.classList.contains('pos-authenticated')) return;
     setMessage('');
     const username = usernameInput.value.trim();
     const password = passwordInput.value;
