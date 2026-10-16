@@ -71,6 +71,25 @@
     }
   }
 
+  async function ensureImportedCatalog() {
+    if (!Array.isArray(window.POS_IMPORTED_PRODUCTS) || !window.POS_IMPORTED_PRODUCTS.length) return;
+    const version = String(window.POS_CATALOG_COPY_VERSION || '');
+    const marker = localStorage.getItem('pos_catalog_copy_v1');
+    if (window.POS_CATALOG_COPY_PENDING && version) {
+      await archiveProductsOutsideImportedCatalog();
+      await pushProducts();
+      localStorage.setItem('pos_catalog_copy_v1', version);
+      window.POS_CATALOG_COPY_PENDING = false;
+      return;
+    }
+    if (!version || marker !== version) return;
+    const rows = await cloud.query(`/rest/v1/products?select=id&shop_key=eq.${encodeURIComponent(SHOP_ID)}&deleted_at=is.null&limit=1`);
+    if (rows?.length) return;
+    window.POS_CATALOG_COPY_PENDING = true;
+    await archiveProductsOutsideImportedCatalog();
+    await pushProducts();
+  }
+
   async function pushSales() {
     const rows = localJson(SALES_KEY, []).map((sale) => ({
       number: cloudId(sale.number), owner_id: ownerId(), shop_key: SHOP_ID, sale_date: sale.date || new Date().toISOString(),
@@ -128,13 +147,8 @@
     started = true;
     try {
       switchLocalOwner();
-      await pushShop();
-      if (window.POS_CATALOG_COPY_PENDING && window.POS_CATALOG_COPY_VERSION) {
-        await archiveProductsOutsideImportedCatalog();
-        await pushProducts();
-        localStorage.setItem('pos_catalog_copy_v1', window.POS_CATALOG_COPY_VERSION);
-        window.POS_CATALOG_COPY_PENDING = false;
-      }
+      try { await pushShop(); } catch (error) { console.warn('Cloud shop metadata sync failed:', error.message); }
+      await ensureImportedCatalog();
       const pulled = await Promise.all([pullProducts(), pullSales(), pullSettings()]);
       if (pulled.some(Boolean)) { renderSettings(); renderCategories(); renderProducts(); renderManageProducts(); renderReports(); renderCart(); }
       document.body.dataset.cloudStatus = 'connected';
