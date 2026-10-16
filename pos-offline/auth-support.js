@@ -67,8 +67,6 @@
     gate.setAttribute('aria-hidden', 'true');
     sessionStorage.setItem(SESSION_KEY, '1');
     sessionStorage.setItem(SESSION_USER_KEY, username);
-    localStorage.setItem(PERSISTENT_SESSION_KEY, '1');
-    localStorage.setItem(PERSISTENT_SESSION_USER_KEY, username);
     renderAdminList();
   }
 
@@ -112,7 +110,7 @@
 
   function renderAdminList() {
     if (!adminList) return;
-    const current = sessionStorage.getItem(SESSION_USER_KEY) || localStorage.getItem(PERSISTENT_SESSION_USER_KEY) || '';
+    const current = sessionStorage.getItem(SESSION_USER_KEY) || '';
     adminList.innerHTML = readAdmins().map(admin => `<div class="admin-list-row"><span><strong>${admin.username}</strong>${admin.username === current ? '<small>กำลังใช้งาน</small>' : ''}</span><button class="small-button delete" type="button" data-remove-admin="${admin.username}">ลบ</button></div>`).join('');
     adminList.querySelectorAll('[data-remove-admin]').forEach(button => button.addEventListener('click', () => removeAdmin(button.dataset.removeAdmin)));
   }
@@ -165,17 +163,17 @@
 
   // Keep the active login when the user reloads the POS page.
   // A new browser tab still shows the login screen unless this tab has an active session.
-  const savedUser = sessionStorage.getItem(SESSION_USER_KEY) || localStorage.getItem(PERSISTENT_SESSION_USER_KEY) || '';
+  try {
+    localStorage.removeItem(PERSISTENT_SESSION_KEY);
+    localStorage.removeItem(PERSISTENT_SESSION_USER_KEY);
+  } catch (_) {}
+  const savedUser = sessionStorage.getItem(SESSION_USER_KEY) || '';
   async function restoreLogin() {
     const cloudSession = cloud?.configured
       ? (cloud.restoreSession ? await cloud.restoreSession() : cloud.hasSession?.())
       : false;
-    const hasLocalLogin = Boolean(savedUser) && (
-      sessionStorage.getItem(SESSION_KEY) === '1' || localStorage.getItem(PERSISTENT_SESSION_KEY) === '1'
-    );
-    // Keep the POS open after refresh when Supabase is temporarily unavailable.
-    // Cloud sync will resume automatically as soon as a valid session is available.
-    const hasSavedLogin = cloud?.configured ? (cloudSession || hasLocalLogin) : hasLocalLogin;
+    const hasLocalLogin = Boolean(savedUser) && sessionStorage.getItem(SESSION_KEY) === '1';
+    const hasSavedLogin = cloud?.configured ? Boolean(cloudSession) : hasLocalLogin;
     if (hasSavedLogin) {
       setAuthenticated(savedUser || usernameInput.value.trim() || 'admin');
       window.setTimeout(() => window.posCloudSync?.start(), 0);
