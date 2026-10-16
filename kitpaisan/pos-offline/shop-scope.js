@@ -7,7 +7,7 @@
     'pos_settings_v1',
     'pos_cloud_owner_v1'
   ]);
-  const prefix = `pos_shop_${shopId}_`;
+  const prefix = `pos_barcode_shop_${shopId}_`;
   const keyFor = (key) => scopedKeys.has(key) ? `${prefix}${key}` : key;
   const nativeGetItem = Storage.prototype.getItem;
   const nativeSetItem = Storage.prototype.setItem;
