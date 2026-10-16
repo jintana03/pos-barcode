@@ -57,6 +57,20 @@
     await upsert('products', rows.map(({ is_hidden, ...row }) => row), 'id');
   }
 
+  async function archiveProductsOutsideImportedCatalog() {
+    try {
+      const shop = encodeURIComponent(SHOP_ID);
+      const importedIdPattern = encodeURIComponent(`${SHOP_ID}:import-*`);
+      await cloud.query(`/rest/v1/products?shop_key=eq.${shop}&id=not.like.${importedIdPattern}&deleted_at=is.null`, {
+        method: 'PATCH',
+        headers: { Prefer: 'return=minimal' },
+        body: JSON.stringify({ deleted_at: new Date().toISOString() })
+      });
+    } catch (error) {
+      console.warn('Catalog cleanup failed:', error.message);
+    }
+  }
+
   async function pushSales() {
     const rows = localJson(SALES_KEY, []).map((sale) => ({
       number: cloudId(sale.number), owner_id: ownerId(), shop_key: SHOP_ID, sale_date: sale.date || new Date().toISOString(),
@@ -115,6 +129,12 @@
     try {
       switchLocalOwner();
       await pushShop();
+      if (window.POS_CATALOG_COPY_PENDING && window.POS_CATALOG_COPY_VERSION) {
+        await archiveProductsOutsideImportedCatalog();
+        await pushProducts();
+        localStorage.setItem('pos_catalog_copy_v1', window.POS_CATALOG_COPY_VERSION);
+        window.POS_CATALOG_COPY_PENDING = false;
+      }
       const pulled = await Promise.all([pullProducts(), pullSales(), pullSettings()]);
       if (pulled.some(Boolean)) { renderSettings(); renderCategories(); renderProducts(); renderManageProducts(); renderReports(); renderCart(); }
       document.body.dataset.cloudStatus = 'connected';
