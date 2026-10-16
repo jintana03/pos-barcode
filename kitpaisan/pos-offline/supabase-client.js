@@ -1,6 +1,6 @@
 (function () {
-  const SUPABASE_URL = 'https://tuonbfpcqogewkxlpcdn.supabase.co';
-  const SUPABASE_KEY = 'sb_publishable_wpu91g3OU7etrSaD45ZwQg_v9dIkIKH';
+  const SUPABASE_URL = 'https://yqsxmrivniegazutpajx.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_c5RLKsPwZtxAl2inaMvdSA_qqU9GdET';
   const SESSION_KEY = 'pos_supabase_session_v1';
 
   function readSession() {

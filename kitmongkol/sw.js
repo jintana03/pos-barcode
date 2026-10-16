@@ -1,9 +1,9 @@
-const CACHE = 'barcode-kitmongkol-v2';
+const CACHE = 'barcode-kitmongkol-v3';
 const ASSETS = [
   './', './index.html', './sw.js', './barcode-scanner-support.js?v=1',
   './pos-offline/styles-fixed.css?v=44', './pos-offline/manifest.webmanifest',
   './pos-offline/shop-scope.js', './pos-offline/persistence-guard.js', './pos-offline/imported-data.js',
-  './pos-offline/category-sync.js', './pos-offline/supabase-client.js?v=46', './pos-offline/auth-support.js?v=52',
+  './pos-offline/category-sync.js', './pos-offline/supabase-client.js?v=47', './pos-offline/auth-support.js?v=52',
   './pos-offline/app.js?v=44', './pos-offline/sku-support.js?v=44', './pos-offline/discount-support.js?v=44',
   './pos-offline/product-search-support.js?v=44', './pos-offline/unit-support.js?v=45',
   './pos-offline/unit-display-support.js?v=44', './pos-offline/receipt-template.js?v=44',
