@@ -1,5 +1,5 @@
 (function () {
-  if (window.POS_SHOP_ID !== 'barcode-kitpaisan') return;
+  if (window.POS_SHOP_ID !== 'kitpaisan') return;
 
   document.documentElement.classList.add('shop-no-stock-check');
 

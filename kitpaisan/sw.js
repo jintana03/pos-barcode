@@ -1,6 +1,6 @@
-const CACHE = 'barcode-kitpaisan-v4';
+const CACHE = 'barcode-kitpaisan-v5';
 const ASSETS = [
-  './', './index.html', './sw.js', './barcode-scanner-support.js?v=1', './barcode-stock-policy-support.js?v=2',
+  './', './index.html', './sw.js', './barcode-scanner-support.js?v=1', './barcode-stock-policy-support.js?v=3',
   './pos-offline/styles-fixed.css?v=44', './pos-offline/manifest.webmanifest',
   './pos-offline/shop-scope.js', './pos-offline/persistence-guard.js', './pos-offline/imported-data.js',
   './pos-offline/category-sync.js', './pos-offline/supabase-client.js?v=46', './pos-offline/auth-support.js?v=52',
