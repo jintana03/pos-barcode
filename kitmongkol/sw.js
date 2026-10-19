@@ -1,12 +1,12 @@
-const CACHE = 'barcode-kitmongkol-v61';
+const CACHE = 'barcode-kitmongkol-v62';
 const ASSETS = [
   './', './index.html', './sw.js', './barcode-scanner-support.js?v=1',
-  './pos-offline/styles-fixed.css?v=44', './pos-offline/manifest.webmanifest',
+  './pos-offline/styles-fixed.css?v=45', './pos-offline/manifest.webmanifest',
   './pos-offline/shop-scope.js?v=2', './pos-offline/persistence-guard.js', './pos-offline/imported-data.js', './pos-offline/catalog-copy-support.js?v=1',
   './pos-offline/category-sync.js', './pos-offline/supabase-client.js?v=60', './pos-offline/auth-support.js?v=53',
   './pos-offline/app.js?v=44', './pos-offline/sku-support.js?v=44', './pos-offline/discount-support.js?v=44',
   './pos-offline/product-search-support.js?v=44', './pos-offline/unit-support.js?v=45',
-  './pos-offline/unit-display-support.js?v=44', './pos-offline/receipt-template.js?v=44',
+  './pos-offline/unit-display-support.js?v=44', './pos-offline/receipt-template.js?v=45',
   './pos-offline/cloud-sync.js?v=61', './pos-offline/hidden-products-support.js?v=2'
 ];
 self.addEventListener('install', (event) => {
