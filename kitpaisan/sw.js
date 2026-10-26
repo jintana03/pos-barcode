@@ -7,7 +7,7 @@ const ASSETS = [
   './pos-offline/app.js?v=44', './pos-offline/sku-support.js?v=44', './pos-offline/discount-support.js?v=44',
   './pos-offline/product-search-support.js?v=44', './pos-offline/unit-support.js?v=45',
   './pos-offline/unit-display-support.js?v=44', './pos-offline/receipt-template.js?v=45',
-  './pos-offline/cloud-sync.js?v=64', './pos-offline/hidden-products-support.js?v=2'
+ './pos-offline/cloud-sync.js?v=65', './pos-offline/hidden-products-support.js?v=2'
 ];
 self.addEventListener('install', (event) => {
   self.skipWaiting();
