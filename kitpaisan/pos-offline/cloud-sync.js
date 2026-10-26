@@ -5,6 +5,7 @@
   const PRODUCTS_KEY = 'pos_products_v1';
   const SALES_KEY = 'pos_sales_v1';
   const SETTINGS_KEY = 'pos_settings_v1';
+  const PRODUCTS_DIRTY_KEY = 'pos_products_dirty_v1';
   const OWNER_KEY = 'pos_cloud_owner_v1';
   const SHOP = window.POS_SHOP || { id: 'default', name: 'ร้านค้าของฉัน' };
   const SHOP_ID = String(SHOP.id || 'default');
@@ -22,6 +23,9 @@
   function ownerId() { return cloud.userId(); }
   function cloudId(id) { return `${SHOP_ID}:${id}`; }
   function localId(id) { return String(id || '').startsWith(`${SHOP_ID}:`) ? String(id).slice(SHOP_ID.length + 1) : id; }
+  function productsDirty() { return localStorage.getItem(PRODUCTS_DIRTY_KEY) === '1'; }
+  function markProductsDirty() { localStorage.setItem(PRODUCTS_DIRTY_KEY, '1'); }
+  function clearProductsDirty() { localStorage.removeItem(PRODUCTS_DIRTY_KEY); }
 
   async function upsert(table, rows, conflict) {
     if (!rows.length) return;
@@ -63,6 +67,7 @@
       try {
         await upsert('products', rows, 'id');
         hiddenColumnAvailable = true;
+        clearProductsDirty();
         return;
       } catch (error) {
         if (!String(error.message || '').toLowerCase().includes('is_hidden')) throw error;
@@ -70,6 +75,7 @@
       }
     }
     await upsert('products', rows.map(({ is_hidden, ...row }) => row), 'id');
+    clearProductsDirty();
   }
 
   async function archiveProductsOutsideImportedCatalog() {
@@ -173,7 +179,9 @@
       switchLocalOwner();
       try { await pushShop(); } catch (error) { console.warn('Cloud shop metadata sync failed:', error.message); }
       await ensureImportedCatalog();
-      const pulled = await Promise.all([pullProducts(), pullSales(), pullSettings()]);
+      const localProductsAreDirty = productsDirty();
+      if (localProductsAreDirty) await pushProducts();
+      const pulled = await Promise.all([localProductsAreDirty ? Promise.resolve(false) : pullProducts(), pullSales(), pullSettings()]);
       if (pulled.some(Boolean)) { renderSettings(); renderCategories(); renderProducts(); renderManageProducts(); renderReports(); renderCart(); }
       document.body.dataset.cloudStatus = 'connected';
     } catch (error) {
@@ -194,6 +202,7 @@
   }
 
   function queue(key) {
+    if (key === PRODUCTS_KEY) markProductsDirty();
     if (applying || !cloud.hasSession()) return;
     clearTimeout(timers.get(key));
     timers.set(key, setTimeout(async () => {
