@@ -86,12 +86,21 @@
     }
   }
 
+  async function archiveAllProductsForCatalogReplace() {
+    await cloud.query(`/rest/v1/products?shop_key=eq.${encodeURIComponent(SHOP_ID)}&deleted_at=is.null`, {
+      method: 'PATCH',
+      headers: { Prefer: 'return=minimal' },
+      body: JSON.stringify({ deleted_at: new Date().toISOString() })
+    });
+  }
+
   async function ensureImportedCatalog() {
     if (!Array.isArray(window.POS_IMPORTED_PRODUCTS) || !window.POS_IMPORTED_PRODUCTS.length) return;
     const version = String(window.POS_CATALOG_COPY_VERSION || '');
     const marker = localStorage.getItem('pos_catalog_copy_v1');
     if (window.POS_CATALOG_COPY_PENDING && version) {
-      await archiveProductsOutsideImportedCatalog();
+      if (window.POS_CATALOG_REPLACE) await archiveAllProductsForCatalogReplace();
+      else await archiveProductsOutsideImportedCatalog();
       await pushProducts();
       localStorage.setItem('pos_catalog_copy_v1', version);
       window.POS_CATALOG_COPY_PENDING = false;
