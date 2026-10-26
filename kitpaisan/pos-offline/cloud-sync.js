@@ -25,11 +25,26 @@
 
   async function upsert(table, rows, conflict) {
     if (!rows.length) return;
-    await cloud.query(`/rest/v1/${table}?on_conflict=${conflict}`, {
-      method: 'POST',
-      headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify(rows)
-    });
+    for (let index = 0; index < rows.length; index += 100) {
+      const batch = rows.slice(index, index + 100);
+      await cloud.query(`/rest/v1/${table}?on_conflict=${conflict}`, {
+        method: 'POST',
+        headers: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+        body: JSON.stringify(batch)
+      });
+    }
+  }
+
+  async function queryAll(path, pageSize = 1000) {
+    const rows = [];
+    for (let offset = 0; ; offset += pageSize) {
+      const separator = path.includes('?') ? '&' : '?';
+      const page = await cloud.query(`${path}${separator}limit=${pageSize}&offset=${offset}`);
+      if (!Array.isArray(page) || !page.length) break;
+      rows.push(...page);
+      if (page.length < pageSize) break;
+    }
+    return rows;
   }
 
   async function pushShop() {
@@ -106,7 +121,7 @@
   }
 
   async function pullProducts() {
-    const rows = await cloud.query(`/rest/v1/products?select=*&shop_key=eq.${encodeURIComponent(SHOP_ID)}&deleted_at=is.null&order=updated_at.asc`);
+    const rows = await queryAll(`/rest/v1/products?select=*&shop_key=eq.${encodeURIComponent(SHOP_ID)}&deleted_at=is.null&order=updated_at.asc,id.asc`);
     if (!rows?.length) { await pushProducts(); return false; }
     applying = true;
     const existingHidden = new Map(products.map((product) => [String(product.id), Boolean(product.hidden)]));
@@ -117,7 +132,7 @@
   }
 
   async function pullSales() {
-    const rows = await cloud.query(`/rest/v1/sales?select=*&shop_key=eq.${encodeURIComponent(SHOP_ID)}&order=sale_date.desc`);
+    const rows = await queryAll(`/rest/v1/sales?select=*&shop_key=eq.${encodeURIComponent(SHOP_ID)}&order=sale_date.desc,number.desc`);
     if (!rows?.length) { await pushSales(); return false; }
     applying = true;
     sales = rows.map((row) => ({ ...(row.data || {}), number: localId(row.number), date: row.sale_date, subtotal: Number(row.subtotal || 0), discount: Number(row.discount || 0), discountPercent: Number(row.discount_percent || 0), total: Number(row.total || 0), payment: row.payment || 'เงินสด' }));
